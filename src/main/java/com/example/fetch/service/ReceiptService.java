@@ -16,21 +16,28 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+// The @Service annotation is used to indicate that this class is a service class
 @Service
 public class ReceiptService {
+    // Hashmap to hold receipt UUID and corresponding receipt
     Map<UUID, Receipt> receipts = new HashMap<>();
 
+    // Autowiring the receipt and item repositories
     @Autowired
     private ReceiptRepository receiptRepository;
     @Autowired
     private ItemRepository itemRepository;
 
+    // Function to process receipt and save to repository
     public ResponseEntity<Map<String, String>> processReceipt(Receipt receipt) {
+        // Generate a new UUID for the receipt
         UUID id = UUID.randomUUID();
         System.out.println(id);
+        // Set the generated UUID in the receipt
         receipt.setId(id);
+        // Calculate points for the receipt
         calculatePoints(receipt);
-        // Save the receipt along with its items
+        // Save the receipt in the repository
         receiptRepository.save(receipt);
 
         // Set the receipt in each item
@@ -38,28 +45,35 @@ public class ReceiptService {
             item.setReceipt(receipt);
         }
 
-
-
+        // Generate a response map with receipt id
         Map<String, String> response = new HashMap<>();
         response.put("id", receipt.getId().toString());
+        // Return the response along with HTTP status
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-public ResponseEntity<Map<String, Integer>> getReceiptPoints(UUID id) {
-    Integer points = receiptRepository.findPointsById(id);
+    // Function to get the receipt points from repository
+    public ResponseEntity<Map<String, Integer>> getReceiptPoints(UUID id) {
+        Integer points = receiptRepository.findPointsById(id);
 
-    if (points == null) {
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        // If no points found, return HTTP 404 status
+        if (points == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        // Generate a response map with receipt points
+        Map<String, Integer> response = new HashMap<>();
+        response.put("points", points);
+        // Return the response along with HTTP status
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    Map<String, Integer> response = new HashMap<>();
-    response.put("points", points);
-    return new ResponseEntity<>(response, HttpStatus.OK);
-}
-
+    // Function to calculate points based on the receipt details
     private void calculatePoints(Receipt receipt) {
+        // variable to hold the points
         int points = 0;
 
+        // Code block to calculate points based on retailer name
         // 1 point for every alphanumeric character in the retailer name
         String retailerName = receipt.getRetailer();
         for (char c : retailerName.toCharArray()) {
@@ -68,6 +82,7 @@ public ResponseEntity<Map<String, Integer>> getReceiptPoints(UUID id) {
             }
         }
 
+        // Code block to calculate points based on total amount
         // 50 points if the total is a round dollar amount with no cents
         if (Double.valueOf(receipt.getTotal()) % 1 == 0) {
             points += 50;
@@ -81,89 +96,34 @@ public ResponseEntity<Map<String, Integer>> getReceiptPoints(UUID id) {
         // 5 points for every two items on the receipt
         points += (receipt.getItems().size() / 2) * 5;
 
-        // If the trimmed length of the item description is a multiple of 3,
-        // multiply the price by 0.2 and round up to the nearest integer
+        // Code block to calculate points based on item description
         for (Item item : receipt.getItems()) {
             String description = item.getShortDescription().trim();
+            // If the trimmed length of the item description is
+            // a multiple of 3, multiply the price by 0.2 and round up to the nearest integer
             if (description.length() % 3 == 0) {
                 points += Math.ceil(Double.valueOf(item.getPrice()) * 0.2);
             }
         }
 
-        // 6 points if the day in the purchase date is odd
+        // Code block to calculate points based on the purchase date
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate purchaseDate = LocalDate.parse(receipt.getPurchaseDate(), dateFormatter);
+        // 6 points if the day in the purchase date is odd
         if (purchaseDate.getDayOfMonth() % 2 != 0) {
             points += 6;
         }
 
-        // 10 points if the time of purchase is after 2:00pm and before 4:00pm
+        // Code block to calculate points based on the purchase time
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
         LocalTime purchaseTime = LocalTime.parse(receipt.getPurchaseTime(), timeFormatter);
+        // 10 points if the time of purchase is after 2:00pm and before 4:00pm
         if (purchaseTime.isAfter(LocalTime.of(14, 0)) &&
                 purchaseTime.isBefore(LocalTime.of(16, 0))) {
             points += 10;
         }
 
-        // Set the points in the receipt
+        // Finally, set the calculated points in the receipt
         receipt.setPoints(points);
     }
-
-
-
-
-//    private void calculatePoints(Receipt receipt) {
-//        // Perform your point calculations here based on the receipt data
-//
-//        int points = 0;
-//
-//        // One point for every alphanumeric character in the retailer name.
-//        String retailerName = receipt.getRetailer();
-//        for (char ch : retailerName.toCharArray()) {
-//            if (Character.isLetterOrDigit(ch)) {
-//                points++;
-//            }
-//        }
-//
-//        // 50 points if the total is a round dollar amount with no cents.
-//        double total = Double.parseDouble(receipt.getTotal());
-//        if (total % 1 == 0) {
-//            points += 50;
-//        }
-//
-//        // 25 points if the total is a multiple of 0.25.
-//        else if (total % 0.25 == 0) {
-//            points += 25;
-//        }
-//
-//        // 5 points for every two items on the receipt.
-//        points += (receipt.getItems().size() / 2) * 5;
-//
-//        // If the trimmed length of the item description is a multiple of 3,
-//        // multiply the price by 0.2 and round up to the nearest integer.
-//        // The result is the number of points earned.
-//        for (Item item : receipt.getItems()) {
-//            if (item.getShortDescription().trim().length() % 3 == 0) {
-//                double itemPrice = Double.parseDouble(item.getPrice());
-//                points += Math.ceil(itemPrice * 0.2);
-//            }
-//        }
-//
-//        // 6 points if the day in the purchase date is odd.
-//        String[] dateParts = receipt.getPurchaseDate().split("-");
-//        int day = Integer.parseInt(dateParts[2]);
-//        if (day % 2 != 0) {
-//            points += 6;
-//        }
-//
-//        // 10 points if the time of purchase is after 2:00pm and before 4:00pm.
-//        String[] timeParts = receipt.getPurchaseTime().split(":");
-//        int hour = Integer.parseInt(timeParts[0]);
-//        if (hour >= 14 && hour < 16) {
-//            points += 10;
-//        }
-//
-//        receipt.setPoints(points);
-//    }
 }
-
