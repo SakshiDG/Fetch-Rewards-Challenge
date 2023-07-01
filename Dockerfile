@@ -17,7 +17,7 @@ COPY src /app/src
 RUN mvn verify
 
 # Start a new stage for running the application
-FROM openjdk:17-jdk-alpine
+FROM openjdk:17-jdk
 
 # Add Maintainer Info
 LABEL maintainer="sakshigarg1602@gmail.com"

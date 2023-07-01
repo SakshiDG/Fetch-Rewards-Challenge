@@ -40,14 +40,22 @@ public class Item {
     }
 
     public void setShortDescription(String shortDescription) {
-        this.shortDescription = shortDescription;
+        this.shortDescription = shortDescription.trim();
     }
 
     public void setPrice(String price) {
-        this.price = price;
+        this.price = price.trim();
     }
 
     public void setReceipt(Receipt receipt) {
         this.receipt = receipt;
+    }
+    @Override
+    public String toString() {
+        return "Item{" +
+                "id=" + this.getId() +
+                ", shortDescription='" + this.getShortDescription() + '\'' +
+                ", price='" + this.getPrice() + '\'' +
+                '}';
     }
 }

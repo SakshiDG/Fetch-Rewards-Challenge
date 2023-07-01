@@ -55,27 +55,41 @@ public class Receipt {
     }
 
     public void setRetailer(String retailer) {
-        this.retailer = retailer;
+        this.retailer = retailer.trim();
     }
 
     public void setPurchaseDate(String purchaseDate) {
-        this.purchaseDate = purchaseDate;
+        this.purchaseDate = purchaseDate.trim();
     }
 
     public void setPurchaseTime(String purchaseTime) {
-        this.purchaseTime = purchaseTime;
+        this.purchaseTime = purchaseTime.trim();
     }
 
     public void setTotal(String total) {
-        this.total = total;
+        this.total = total.trim();
     }
 
     public void setItems(List<Item> items) {
         this.items = items;
     }
 
+
     public void setPoints(int points) {
         this.points = points;
+    }
+
+    @Override
+    public String toString() {
+        return "Receipt{" +
+                "id=" + id +
+                ", retailer='" + retailer + '\'' +
+                ", purchaseDate='" + purchaseDate + '\'' +
+                ", purchaseTime='" + purchaseTime + '\'' +
+                ", total='" + total + '\'' +
+                ", items=" + items +
+                ", points=" + points +
+                '}';
     }
 }
 
